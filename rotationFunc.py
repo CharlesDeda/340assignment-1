@@ -17,7 +17,7 @@ def getScaledImageAndSize(image):
     scaledImage = np.zeros((scaledSize, scaledSize, 3), np.float32)
     return scaledImage, scaledSize
 
-def rotate(scaledImage, scaledSize, angle):
+def rotate(iImage, scaledImage, scaledSize, angle):
     numRows = iImage.shape[0]  # height of image
     numCols = iImage.shape[1]  # width of image
 
@@ -68,14 +68,19 @@ def rotate(scaledImage, scaledSize, angle):
 
     return rotatedImage, colorCorrection, finalError
 
+def main():
+    iImage = cv2.imread("fallen-angel.jpg")
+    output = getScaledImageAndSize(iImage)
+    (scaledImage, scaledSize) = output
+    degrees = 90
+    rotations = 360//degrees
+    for rotation in range(1,rotations + 1):
+        angle = degrees * rotation
+        (rotatedImage, colorCorrection, finalError) = rotate(iImage, scaledImage, scaledSize, angle)
+        #display image
+        cv2.imshow("Copied image", rotatedImage / 255.0) #ensure image is /255 to display properly
+        cv2.imwrite(f'{angle}.png', rotatedImage)
+        cv2.waitKey(0) #pauses program until enter key is hit
+        cv2.destroyAllWindows() #stops all programs imshow
 
-iImage = cv2.imread("fallen-angel.jpg")
-output = getScaledImageAndSize(iImage)
-(scaledImage, scaledSize) = output
-(rotatedImage, colorCorrection, finalError) = rotate(scaledImage, scaledSize, 90)
-
-#display image
-cv2.imshow("Copied image", rotatedImage / 255.0) #ensure image is /255 to display properly
-cv2.imwrite("savedimage.png", rotatedImage)
-cv2.waitKey(0) #pauses program until enter key is hit
-cv2.destroyAllWindows() #stops all programs imshow
+main()

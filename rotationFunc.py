@@ -2,29 +2,20 @@ import cv2
 import numpy as np
 from matrixMult import matrixMult
 
-def getScaledImageAndSize(image):
-    # Image Dimensions
-    numRows = image.shape[0]  # height of image
-    numCols = image.shape[1]  # width of image
+def getSize(image, scale):
+    return int(scale * max(image.shape[0], image.shape[1]))
 
-    # Scaling Factor to determine image size
-    scalingFactor = 1.5
+def createEmptyImage(size):
+    return np.zeros((size, size, 3), np.float32)
 
-    # Image size scaled
-    scaledSize = int(scalingFactor * max(numRows, numCols))
-
-    # Center original image in new image by using offsets
-    scaledImage = np.zeros((scaledSize, scaledSize, 3), np.float32)
-    return scaledImage, scaledSize
-
-def rotate(iImage, scaledImage, scaledSize, angle):
+def rotate(iImage, oImage, angle):
     numRows = iImage.shape[0]  # height of image
     numCols = iImage.shape[1]  # width of image
+    scaledSize = getSize(oImage, 1)
+    scaledSize2 = scaledSize // 2
 
-    #
     ###Create an empty image of scaledSize
     rotatedImage = np.zeros((scaledSize, scaledSize, 3), np.float32)
-    scaledSize2 = scaledSize // 2
 
     offsetb = (scaledSize - numRows) // 2
     offseta = (scaledSize - numCols) // 2
@@ -33,7 +24,8 @@ def rotate(iImage, scaledImage, scaledSize, angle):
     ### iterate through pixels and change colors
     for b in range(numRows):  # height of the image, y coordinates
         for a in range(numCols):  # width of the image, x coordinates
-            scaledImage[b + offsetb][a + offseta] = iImage[b][a]
+            oImage[b + offsetb][a + offseta] = iImage[b][a]
+
     colorCorrection = 0
     rotations = 1
     rotationMatrix = np.array([[np.cos(np.deg2rad(angle)), np.sin(np.deg2rad(-angle))],
@@ -50,14 +42,14 @@ def rotate(iImage, scaledImage, scaledSize, angle):
             r2 = rotatedPoint[0][0] + scaledSize2
             r3 = rotatedPoint[1][0] + scaledSize2
 
-            blueValueInitial = scaledImage[i][j][0]
-            greenValueInitial = scaledImage[i][j][1]
-            redValueInitial = scaledImage[i][j][2]
+            blueValueInitial = oImage[i][j][0]
+            greenValueInitial = oImage[i][j][1]
+            redValueInitial = oImage[i][j][2]
 
             finalError = (r2 - r0 + r3 - r1) / scaledSize * rotations
             if (r0 >= scaledSize or r1 >= scaledSize) or (r0 < 0 or r1 < 0):
                 continue
-            rotatedImage[i][j] = scaledImage[r1][r0]  # finalPoint logic
+            rotatedImage[i][j] = oImage[r1][r0]  # finalPoint logic
 
             redValueFinal = rotatedImage[i][j][0]
             greenValueFinal = rotatedImage[i][j][1]
@@ -65,18 +57,22 @@ def rotate(iImage, scaledImage, scaledSize, angle):
             colorError = np.sqrt((redValueFinal - redValueInitial) ** 2 + (greenValueFinal - greenValueInitial) ** 2 + (
                     blueValueFinal - blueValueInitial) ** 2)
             colorCorrection += colorError
-
+    colorCorrection/= (378 * 600)
     return rotatedImage, colorCorrection, finalError
 
 def main():
     iImage = cv2.imread("fallen-angel.jpg")
-    output = getScaledImageAndSize(iImage)
-    (scaledImage, scaledSize) = output
-    degrees = 90
-    rotations = 360//degrees
-    for rotation in range(1,rotations + 1):
+    oImage = createEmptyImage(getSize(iImage, 1.5))
+
+    degrees = int(input("Degrees to rotate by?"))
+    rotations = int(input("How many rotations?"))
+
+    for rotation in range(1, rotations + 1):
         angle = degrees * rotation
-        (rotatedImage, colorCorrection, finalError) = rotate(iImage, scaledImage, scaledSize, angle)
+        (rotatedImage, colorCorrection, finalError) = rotate(iImage, oImage, angle)
+        print(colorCorrection, "CC")
+        print()
+        print(finalError, "FE")
         #display image
         cv2.imshow("Copied image", rotatedImage / 255.0) #ensure image is /255 to display properly
         cv2.imwrite(f'{angle}.png', rotatedImage)

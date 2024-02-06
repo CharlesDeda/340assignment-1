@@ -33,7 +33,7 @@ def rotate(iImage, oImage, angle):
 
     for i in range(scaledSize):  # height of the image, y coordinates
         for j in range(scaledSize):  # width of the image, x coordinates
-            # newEmptyIm must be the image we saved so that we can rotate THAT image
+
             imageMatrix = np.array([[j - scaledSize2], [i - scaledSize2]])
             # image2[i][j] = image1[i-scaledSize2][j-scaledSize2] #shifted
             rotatedPoint = matrixMult(rotationMatrix, imageMatrix)  # rotatedPoint logic to get matrix of new points
@@ -57,6 +57,7 @@ def rotate(iImage, oImage, angle):
             colorError = np.sqrt((redValueFinal - redValueInitial) ** 2 + (greenValueFinal - greenValueInitial) ** 2 + (
                     blueValueFinal - blueValueInitial) ** 2)
             colorCorrection += colorError
+            iImage = rotatedImage
     colorCorrection/= (378 * 600)
     return rotatedImage, colorCorrection, finalError
 
@@ -64,18 +65,19 @@ def main():
     iImage = cv2.imread("fallen-angel.jpg")
     oImage = createEmptyImage(getSize(iImage, 1.5))
 
-    degrees = int(input("Degrees to rotate by?"))
-    rotations = int(input("How many rotations?"))
+    degrees = int(input("Degrees: "))
+    rotations = 360//degrees
 
     for rotation in range(1, rotations + 1):
-        angle = degrees * rotation
-        (rotatedImage, colorCorrection, finalError) = rotate(iImage, oImage, angle)
+        #angle = degrees * rotation
+        (rotatedImage, colorCorrection, finalError) = rotate(iImage, oImage, degrees)
+        iImage = rotatedImage
         print(colorCorrection, "CC")
         print()
         print(finalError, "FE")
         #display image
         cv2.imshow("Copied image", rotatedImage / 255.0) #ensure image is /255 to display properly
-        cv2.imwrite(f'{angle}.png', rotatedImage)
+        cv2.imwrite('new.png', rotatedImage)
         cv2.waitKey(0) #pauses program until enter key is hit
         cv2.destroyAllWindows() #stops all programs imshow
 
